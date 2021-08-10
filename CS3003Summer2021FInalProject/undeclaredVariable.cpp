@@ -1,9 +1,12 @@
 // undeclaredIdentifier.cpp
 int alpha, beta;
 int main() {
-	int a,b,c, x;
-    x = 42;
-    alpha = 42;
+	int y;
+	y = 1;
+	do {
+		y = y + 1;
+		}
+		while (x > 4)
 } // main
 
 void foo() {

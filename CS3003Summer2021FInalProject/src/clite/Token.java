@@ -45,6 +45,9 @@ public class Token {
     public static final Token divideTok = new Token(TokenType.Divide, "/");
     public static final Token andTok = new Token(TokenType.And, "&&");
     public static final Token orTok = new Token(TokenType.Or, "||");
+    public static final Token powerTok = new Token(TokenType.Power, "^");
+    public static final Token doTok = new Token(TokenType.Do, "do");
+    public static final Token doubleTok = new Token(TokenType.Double, "double");
 
     private TokenType type;
     private String value = "";
@@ -83,6 +86,11 @@ public class Token {
     public static Token mkFloatLiteral (String name) {
         return new Token(TokenType.FloatLiteral, name);
     }
+    
+    public static Token mkDoubleLiteral (String name) {
+        return new Token(TokenType.DoubleLiteral, name);
+    }
+    
 
     public static Token mkCharLiteral (String name) {
         return new Token(TokenType.CharLiteral, name);

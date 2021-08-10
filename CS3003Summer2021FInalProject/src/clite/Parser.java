@@ -175,7 +175,7 @@ public class Parser {
     }
   
     private Type type () {
-        // Type  -->  int | bool | float | char 
+        // Type  -->  int | bool | float | char | double
         Type t = null;
 	if (token.type().equals(TokenType.Int)) {
 		t = Type.INT;
@@ -185,9 +185,11 @@ public class Parser {
 		t = Type.CHAR;
 	} else if (token.type().equals(TokenType.Float)) {
 		t = Type.FLOAT;
+	} else if (token.type().equals(TokenType.Double)) {
+		t = Type.DOUBLE;
 	} else if (token.type().equals(TokenType.Void)) {
 		t = Type.VOID;
-	} else error("int | bool | float | char");
+	} else error("int | bool | float | char | double");
         // student exercise
         return t;          
     }
@@ -211,6 +213,8 @@ public class Parser {
 		s = ifStatement();
 	} else if (token.type().equals(TokenType.While)) {
 		s = whileStatement();
+	} else if (token.type().equals(TokenType.Do)) {
+		s = doStatement();
 	} else if (token.type().equals(TokenType.Return)) {
 		s = returnStatement();
 		match(TokenType.Semicolon);
@@ -282,6 +286,19 @@ public class Parser {
 	Expression test = expression();
 	match(TokenType.RightParen);
 	Statement st = statement();
+        return new Loop(test, st);  // student exercise
+    }
+    
+
+    
+    private Loop doStatement () {
+    // DoWhileStatement --> do {Statement} while (Expression)
+	match(token.type());
+	Statement st = statement();
+	match(TokenType.While);
+	match(TokenType.LeftParen);
+	Expression test = expression();
+	match(TokenType.RightParen);
         return new Loop(test, st);  // student exercise
     }
 
@@ -437,6 +454,9 @@ public class Parser {
 	} else if (token.type().equals(TokenType.FloatLiteral)) {
 		float f_val = Float.parseFloat(match(token.type()));
 		val = new FloatValue(f_val);
+	} else if (token.type().equals(TokenType.DoubleLiteral)) {
+		double f_val = Double.parseDouble(match(token.type()));
+		val = new DoubleValue(f_val);
 	} else {
 		char c_val = match(token.type()).charAt(0);
 		val = new CharValue(c_val); 
@@ -452,7 +472,8 @@ public class Parser {
     
     private boolean isMultiplyOp( ) {
         return token.type().equals(TokenType.Multiply) ||
-               token.type().equals(TokenType.Divide);
+               token.type().equals(TokenType.Divide) ||
+               token.type().equals(TokenType.Power);
     }
     
     private boolean isUnaryOp( ) {
@@ -477,6 +498,7 @@ public class Parser {
             || token.type().equals(TokenType.Bool) 
             || token.type().equals(TokenType.Float)
             || token.type().equals(TokenType.Char)
+            || token.type().equals(TokenType.Double)
 	    || token.type().equals(TokenType.Void);
     }
     
@@ -484,6 +506,7 @@ public class Parser {
         return token.type().equals(TokenType.IntLiteral) ||
             isBooleanLiteral() ||
             token.type().equals(TokenType.FloatLiteral) ||
+            token.type().equals(TokenType.DoubleLiteral) ||
             token.type().equals(TokenType.CharLiteral);
     }
     

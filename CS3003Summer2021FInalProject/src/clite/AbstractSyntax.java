@@ -252,13 +252,15 @@ class ArrayDecl extends Declaration {
 }
 
 class Type {
-    // Type = int | bool | char | float | void
+    // Type = int | bool | char | float | double | void
     final static Type INT = new Type("int");
     final static Type BOOL = new Type("bool");
     final static Type CHAR = new Type("char");
     final static Type FLOAT = new Type("float");
+    final static Type DOUBLE = new Type("double");
     final static Type VOID = new Type("void");
     // final static Type UNDEFINED = new Type("undef");
+
     
     private String id;
 
@@ -272,6 +274,8 @@ class Type {
 		return "I";
 	else if (this.equals(Type.FLOAT))
 		return "F";
+	else if (this.equals(Type.DOUBLE))
+		return "D";
 	else if (this.equals(Type.VOID))
 		return "V";
 	else
@@ -365,6 +369,7 @@ class Loop extends Statement {
     Loop (Expression t, Statement b) {
         test = t; body = b;
     }
+    
 
 	boolean hasReturn() {
 		return body.hasReturn();
@@ -465,7 +470,7 @@ class ArrayRef extends VariableRef {
 	
 abstract class Value extends Expression {
     // Value = IntValue | BoolValue |
-    //         CharValue | FloatValue
+    //         CharValue | FloatValue | DoubleValue
     protected Type type;
     protected boolean undef = true;
 
@@ -488,6 +493,11 @@ abstract class Value extends Expression {
         assert false : "should never reach here";
         return 0.0f;
     }
+    
+    double doubleValue ( ) {
+        assert false : "should never reach here";
+        return 0.0d;
+    }
 
     boolean isUndef( ) { return undef; }
 
@@ -498,6 +508,7 @@ abstract class Value extends Expression {
         if (type == Type.BOOL) return new BoolValue( );
         if (type == Type.CHAR) return new CharValue( );
         if (type == Type.FLOAT) return new FloatValue( );
+        if (type == Type.DOUBLE) return new DoubleValue( );
         throw new IllegalArgumentException("Illegal type in mkValue");
     }
 }
@@ -588,6 +599,25 @@ class FloatValue extends Value {
 
 }
 
+class DoubleValue extends Value {
+    private double value = 0;
+
+    DoubleValue ( ) { type = Type.DOUBLE; }
+
+    DoubleValue (double v) { this( ); value = v; undef = false; }
+
+    double doubleValue ( ) {
+        assert !undef : "reference to undefined double value";
+        return value;
+    }
+
+    public String toString( ) {
+        if (undef)  return "undef";
+        return "" + value;
+    }
+
+}
+
 class Binary extends Expression {
 // Binary = Operator op; Expression term1, term2
     Operator op;
@@ -649,6 +679,7 @@ class Operator {
     final static String MINUS = "-";
     final static String TIMES = "*";
     final static String DIV = "/";
+    final static String POWER = "^";
     // UnaryOp = !    
     final static String NOT = "!";
     final static String NEG = "-NEG"; //This has been changed from "-" to "-NEG" to avoid ambiguity with MINUS
@@ -656,6 +687,7 @@ class Operator {
     final static String INT = "int";
     final static String FLOAT = "float";
     final static String CHAR = "char";
+    final static String DOUBLE = "double";
     // Typed Operators
     // RelationalOp = < | <= | == | != | >= | >
     final static String INT_LT = "INT<";
@@ -669,6 +701,7 @@ class Operator {
     final static String INT_MINUS = "INT-";
     final static String INT_TIMES = "INT*";
     final static String INT_DIV = "INT/";
+    final static String INT_POWER = "INT^";
     // UnaryOp = !    
     final static String INT_NEG = "INT-NEG";
     // RelationalOp = < | <= | == | != | >= | >
@@ -683,8 +716,24 @@ class Operator {
     final static String FLOAT_MINUS = "FLOAT-";
     final static String FLOAT_TIMES = "FLOAT*";
     final static String FLOAT_DIV = "FLOAT/";
+    final static String FLOAT_POWER = "FLOAT^";
     // UnaryOp = !    
     final static String FLOAT_NEG = "FLOAT-NEG";
+    // RelationalOp = < | <= | == | != | >= | >
+    final static String DOUBLE_LT = "DOUBLE<";
+    final static String DOUBLE_LE = "DOUBLE<=";
+    final static String DOUBLE_EQ = "DOUBLE==";
+    final static String DOUBLE_NE = "DOUBLE!=";
+    final static String DOUBLE_GT = "DOUBLE>";
+    final static String DOUBLE_GE = "DOUBLE>=";
+    // ArithmeticOp = + | - | * | /
+    final static String DOUBLE_PLUS = "DOUBLE+";
+    final static String DOUBLE_MINUS = "DOUBLE-";
+    final static String DOUBLE_TIMES = "DOUBLE*";
+    final static String DOUBLE_DIV = "DOUBLE/";
+    final static String DOUBLE_POWER = "DOUBLE^";
+    // UnaryOp = !    
+    final static String DOUBLE_NEG = "DOUBLE-NEG";
     // RelationalOp = < | <= | == | != | >= | >
     final static String CHAR_LT = "CHAR<";
     final static String CHAR_LE = "CHAR<=";
@@ -702,6 +751,10 @@ class Operator {
     // Type specific cast
     final static String I2F = "I2F";
     final static String F2I = "F2I";
+    final static String I2D = "I2D";
+    final static String F2D = "F2D";
+    final static String D2F = "D2F";
+    final static String D2I = "D2I";
     final static String C2I = "C2I";
     final static String I2C = "I2C";
     
@@ -723,30 +776,43 @@ class Operator {
             || val.equals(INT_PLUS) || val.equals(INT_MINUS)
             || val.equals(INT_TIMES) || val.equals(INT_DIV)
             || val.equals(FLOAT_PLUS) || val.equals(FLOAT_MINUS)
-            || val.equals(FLOAT_TIMES) || val.equals(FLOAT_DIV);
+            || val.equals(FLOAT_TIMES) || val.equals(FLOAT_DIV)
+            || val.equals(DOUBLE_PLUS) || val.equals(DOUBLE_MINUS)
+            || val.equals(DOUBLE_TIMES) || val.equals(DOUBLE_DIV)
+            || val.equals(DOUBLE_POWER) || val.equals(FLOAT_POWER)
+            || val.equals(INT_POWER);
     }
     boolean NotOp ( ) { return val.equals(NOT) ; }
-    boolean NegateOp ( ) { return (val.equals(NEG) || val.equals(INT_NEG) || 
+    boolean NegateOp ( ) { return (val.equals(NEG) || val.equals(INT_NEG) || val.equals(DOUBLE_NEG) || 
 				   val.equals(FLOAT_NEG)); }
     boolean intOp ( ) { return val.equals(INT); }
     boolean floatOp ( ) { return val.equals(FLOAT); }
     boolean charOp ( ) { return val.equals(CHAR); }
+    boolean doubleOp ( ) { return val.equals(DOUBLE); }
 
     final static String intMap[ ] [ ] = {
         {PLUS, INT_PLUS}, {MINUS, INT_MINUS},
-        {TIMES, INT_TIMES}, {DIV, INT_DIV},
+        {TIMES, INT_TIMES}, {DIV, INT_DIV}, {POWER, INT_POWER},
         {EQ, INT_EQ}, {NE, INT_NE}, {LT, INT_LT},
         {LE, INT_LE}, {GT, INT_GT}, {GE, INT_GE},
-        {NEG, INT_NEG}, {FLOAT, I2F}, {CHAR, I2C}
+        {NEG, INT_NEG}, {FLOAT, I2F}, {CHAR, I2C}, {DOUBLE, I2D}
     };
 
     final static String floatMap[ ] [ ] = {
         {PLUS, FLOAT_PLUS}, {MINUS, FLOAT_MINUS},
-        {TIMES, FLOAT_TIMES}, {DIV, FLOAT_DIV},
+        {TIMES, FLOAT_TIMES}, {DIV, FLOAT_DIV}, {POWER, FLOAT_POWER},
         {EQ, FLOAT_EQ}, {NE, FLOAT_NE}, {LT, FLOAT_LT},
         {LE, FLOAT_LE}, {GT, FLOAT_GT}, {GE, FLOAT_GE},
-        {NEG, FLOAT_NEG}, {INT, F2I}
+        {NEG, FLOAT_NEG}, {INT, F2I}, {DOUBLE, F2D}
     };
+    
+    final static String doubleMap[ ] [ ] = {
+            {PLUS, DOUBLE_PLUS}, {MINUS, DOUBLE_MINUS},
+            {TIMES, DOUBLE_TIMES}, {DIV, DOUBLE_DIV}, {POWER, DOUBLE_POWER},
+            {EQ, DOUBLE_EQ}, {NE, DOUBLE_NE}, {LT, DOUBLE_LT},
+            {LE, DOUBLE_LE}, {GT, DOUBLE_GT}, {GE, DOUBLE_GE},
+            {NEG, DOUBLE_NEG}, {INT, D2I}, {FLOAT, D2F}
+        };
 
     final static String charMap[ ] [ ] = {
         {EQ, CHAR_EQ}, {NE, CHAR_NE}, {LT, CHAR_LT},
@@ -774,6 +840,10 @@ class Operator {
 
     final static public Operator floatMap (String op) {
         return map (floatMap, op);
+    }
+    
+    final static public Operator doubleMap (String op) {
+        return map (doubleMap, op);
     }
 
     final static public Operator charMap (String op) {
